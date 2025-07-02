@@ -1,0 +1,34 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    restart: always
+    environment:
+      - DATABASE_URL=postgres://fitly:fitly@db/fitly?sslmode=disable
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./cmd
+          target: /app/cmd
+        - action: sync+restart
+          path: ./internal
+          target: /app/internal
+        - action: rebuild
+          path: ./go.mod
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: fitly
+      POSTGRES_PASSWORD: fitly
+      POSTGRES_DB: fitly
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  db_data:
