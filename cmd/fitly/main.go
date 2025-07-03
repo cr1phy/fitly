@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -11,71 +9,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/cr1phy/fitly/internal/database"
-	"github.com/cr1phy/fitly/internal/entity"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/cr1phy/fitly/internal/router"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 )
 
-func InitRouter(db *sql.DB) chi.Router {
-	router := chi.NewRouter()
-
-	router.Use(middleware.Logger)
-	router.Use(middleware.RealIP)
-	router.Use(middleware.RequestID)
-	router.Use(middleware.Recoverer)
-
-	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		message, _ := json.Marshal(map[string]any{"status": "OK"})
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(message)
-	})
-	router.Get("/products", func(w http.ResponseWriter, r *http.Request) {
-		filter := r.URL.Query().Get("filter")
-
-		w.Header().Set("Content-Type", "application/json")
-
-		if filter == "" {
-			http.Error(w, "Filter is empty", http.StatusBadRequest)
-			return
-		}
-
-		products, err := database.GetAllProductsFromFilter(db, filter)
-		if err != nil {
-			log.Println(err)
-			http.Error(w, "Something went wrong", http.StatusInternalServerError)
-			return
-		}
-
-		message, _ := json.Marshal(map[string]any{"products": products})
-		w.Write(message)
-	})
-	router.Post("/addProduct", func(w http.ResponseWriter, r *http.Request) {
-		body, err := r.GetBody()
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		defer body.Close()
-
-		var data []byte
-		_, err = body.Read(data)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-
-		var product entity.Product
-		if err := json.Unmarshal(data, &product); err != nil {
-			log.Println(err)
-			return
-		}
-		w.Write(data)
-	})
-
-	return router
+func GetMigration() string {
+	migration, _ := os.ReadFile("migration.sql")
+	return string(migration)
 }
 
 func main() {
@@ -86,8 +27,13 @@ func main() {
 		log.Fatalln("database error:", err)
 	}
 	db := stdlib.OpenDBFromPool(pool)
+	_, err = db.Exec(GetMigration())
+	if err != nil {
+		log.Fatalln("migration error:", err)
+	}
+	log.Println("migration finished successfully")
 
-	server := &http.Server{Addr: ":8080", Handler: InitRouter(db)}
+	server := &http.Server{Addr: ":8080", Handler: router.InitHandler(db)}
 	serverCtx, serverCancel := context.WithCancel(ctx)
 
 	sig := make(chan os.Signal, 1)
@@ -112,5 +58,6 @@ func main() {
 		serverCancel()
 	}()
 
+	log.Println("server started")
 	log.Fatalln(server.ListenAndServe())
 }

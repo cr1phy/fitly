@@ -10,6 +10,16 @@ services:
       - DATABASE_URL=postgres://fitly:fitly@db/fitly?sslmode=disable
     depends_on:
       - db
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./cmd
+          target: /app/cmd
+        - action: sync+restart
+          path: ./internal
+          target: /app/internal
+        - action: rebuild
+          path: ./go.mod
   db:
     image: postgres:latest
     environment:
