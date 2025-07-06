@@ -1,88 +1,54 @@
 package router
 
 import (
-	"database/sql"
-	"encoding/json"
 	"log"
 	"net/http"
 
-	"github.com/cr1phy/fitly/internal/database"
-	"github.com/cr1phy/fitly/internal/entity"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/cr1phy/fitly/internal/models"
+	"github.com/gin-gonic/gin"
 )
 
-func status(w http.ResponseWriter, r *http.Request) {
-	message, _ := json.Marshal(map[string]any{"status": "OK"})
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(message)
+func status(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"status": "OK"})
 }
 
-func getProducts(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	filter := r.URL.Query().Get("filter")
+func getProduct(c *gin.Context) {
+	filter := c.Query("filter")
 
-	w.Header().Set("Content-Type", "application/json")
+	result := []models.Product{}
+	models.DB.Model(&models.Product{}).Where("name LIKE ?", filter+"%").Group("name").Find(&result)
 
-	if filter == "" {
-		http.Error(w, "Filter is empty", http.StatusBadRequest)
-		return
+	if len(result) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Not found"})
 	}
-
-	products, err := database.GetAllProductsFromFilter(db, filter)
-	if err != nil {
-		log.Println(err)
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
-		return
-	}
-
-	message, _ := json.Marshal(map[string]any{"products": products})
-	w.Write(message)
+	c.JSON(http.StatusOK, result)
 }
 
-func addProduct(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	body, err := r.GetBody()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	defer body.Close()
-
-	var data []byte
-	_, err = body.Read(data)
-	if err != nil {
-		log.Println(err)
+func addProduct(c *gin.Context) {
+	var p models.Product
+	if err := c.ShouldBindBodyWithJSON(&p); err != nil {
+		log.Panicln("something went wrong with body:", err)
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Something went wrong"})
 		return
 	}
 
-	var product entity.Product
-	if err := json.Unmarshal(data, &product); err != nil {
-		log.Println(err)
+	if err := models.DB.Create(&p); err != nil {
+		log.Panicln("something went wrong with creating product:", err)
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Something went wrong"})
 		return
 	}
-	id, err := database.CreateProduct(db, product)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	w.Write([]byte{byte(id)})
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully created!"})
 }
 
-func InitHandler(db *sql.DB) chi.Router {
-	router := chi.NewRouter()
+func InitRouter() *gin.Engine {
+	r := gin.Default()
 
-	router.Use(middleware.Logger)
-	router.Use(middleware.RealIP)
-	router.Use(middleware.RequestID)
-	router.Use(middleware.Recoverer)
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
 
-	router.Get("/", status)
-	router.Get("/products", func(w http.ResponseWriter, r *http.Request) {
-		getProducts(db, w, r)
-	})
-	router.Post("/addProduct", func(w http.ResponseWriter, r *http.Request) {
-		addProduct(db, w, r)
-	})
+	r.GET("/", status)
+	r.GET("/products", getProduct)
+	r.POST("/products", addProduct)
 
-	return router
+	return r
 }

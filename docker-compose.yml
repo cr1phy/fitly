@@ -6,8 +6,8 @@ services:
     ports:
       - "8080:8080"
     restart: always
-    environment:
-      - DATABASE_URL=postgres://fitly:fitly@db/fitly?sslmode=disable
+    env_file:
+      - .env
     depends_on:
       - db
   db:

@@ -1,4 +1,4 @@
-package entity
+package models
 
 const (
 	SALAD     DishCategory = "salad"
@@ -20,9 +20,9 @@ type Ingredient struct {
 }
 
 type Dish struct {
-	id          int
-	category    DishCategory
+	id          uint         `gorm:"primaryKey"`
+	category    DishCategory `gorm:"embedded"`
 	name        string
 	description string
-	ingredients Ingredient
+	ingredients []Ingredient `gorm:"embedded"`
 }

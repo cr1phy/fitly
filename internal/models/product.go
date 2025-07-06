@@ -1,4 +1,4 @@
-package entity
+package models
 
 import "errors"
 
@@ -20,7 +20,7 @@ type ProductCategory string
 
 type Product struct {
 	Id          int
-	Category    ProductCategory
+	Category    ProductCategory `gorm:"embedded"`
 	Name        string
 	Description string
 	Calories    float64
