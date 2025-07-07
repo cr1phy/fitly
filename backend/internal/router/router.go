@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/cr1phy/fitly/internal/models"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,7 +17,7 @@ func getProduct(c *gin.Context) {
 	filter := c.Query("filter")
 
 	result := []models.Product{}
-	models.DB.Model(&models.Product{}).Where("name LIKE ?", filter+"%").Group("name").Find(&result)
+	models.DB.Model(&models.Product{}).Where("name LIKE ?", "%"+filter+"%").Group("id").Find(&result)
 
 	if len(result) == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Not found"})
@@ -55,7 +56,7 @@ func getDishes(c *gin.Context) {
 	filter := c.Query("filter")
 
 	result := []models.Dish{}
-	models.DB.Model(&models.Dish{}).Where("name LIKE ?", filter+"%").Group("name").Find(&result)
+	models.DB.Model(&models.Dish{}).Where("name LIKE ?", "%"+filter+"%").Group("id").Find(&result)
 
 	if len(result) == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Not found"})
@@ -95,6 +96,7 @@ func InitRouter() *gin.Engine {
 
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
+	r.Use(cors.Default())
 
 	r.GET("/", status)
 	r.GET("/products", getProduct)

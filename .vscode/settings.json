@@ -1,0 +1,31 @@
+{
+    "piny.project_settings": {
+        "open-pages": [
+            "pinyfakepage.html"
+        ],
+        "urls": {
+            "pinyfakepage.html": {
+                "open-page-views": [
+                    {
+                        "w": 788,
+                        "h": 0
+                    }
+                ]
+            }
+        },
+        "component-settings": {
+            "web/app/search/page.tsx:::Temp": {
+                "route": "/search"
+            }
+        },
+        "app-routes": {
+            "routes": [
+                "/",
+                "/dish",
+                "/product",
+                "/search"
+            ],
+            "current_route": "/search"
+        }
+    }
+}
