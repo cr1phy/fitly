@@ -24,6 +24,17 @@ func getProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+func getProductById(c *gin.Context) {
+	id := c.Param("id")
+
+	var p models.Product
+	if err := models.DB.First(&p, id); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Not found"})
+		return
+	}
+	c.JSON(http.StatusOK, p)
+}
+
 func addProduct(c *gin.Context) {
 	var p models.Product
 	if err := c.ShouldBindBodyWithJSON(&p); err != nil {
@@ -52,6 +63,17 @@ func getDishes(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+func getDishById(c *gin.Context) {
+	id := c.Param("id")
+
+	var d models.Dish
+	if err := models.DB.First(&d, id); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Not found"})
+		return
+	}
+	c.JSON(http.StatusOK, d)
+}
+
 func addDish(c *gin.Context) {
 	var d models.Dish
 	if err := c.ShouldBindBodyWithJSON(&d); err != nil {
@@ -76,8 +98,10 @@ func InitRouter() *gin.Engine {
 
 	r.GET("/", status)
 	r.GET("/products", getProduct)
+	r.GET("/product/:id", getProductById)
 	r.POST("/products", addProduct)
 	r.GET("/dishes", getDishes)
+	r.GET("/dish/:id", getDishById)
 	r.POST("/dishes", addDish)
 
 	return r

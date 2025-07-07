@@ -7,7 +7,7 @@ services:
       - "8080:8080"
     restart: always
     environment:
-      - DATABASE_URL=postgres://fitly:fitly@db/fitly?sslmode=disable
+      - POSTGRES_URL=postgres://postgres:postgres@db/postgres
     depends_on:
       - db
     develop:
@@ -23,9 +23,9 @@ services:
   db:
     image: postgres:latest
     environment:
-      POSTGRES_USER: fitly
-      POSTGRES_PASSWORD: fitly
-      POSTGRES_DB: fitly
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
     ports:
       - "5432:5432"
     volumes:

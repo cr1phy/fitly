@@ -28,10 +28,11 @@ type Product = {
 };
 
 const getProduct = async (id: number): Promise<Product | undefined> => {
-  const result = await axios(DEFAULT_URL + `/products/${id}`);
-  if (result.status == 200) {
-    return new Promise(result.data);
+  const {data, status} = await axios(DEFAULT_URL + `/products/${id}`);
+  if (status == 404) {
+    return
   }
+  return data
 };
 
 export { getProduct };
