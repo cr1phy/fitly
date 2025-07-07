@@ -8,5 +8,5 @@ export default async function Page({
     const { id } = await params
     const product = await getProduct(id)
 
-    return <h1>{product!!.name}</h1>
+    return <h1>{product?.name && "Not found"}</h1>
 }
