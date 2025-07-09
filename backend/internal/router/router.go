@@ -22,7 +22,7 @@ func getProduct(c *gin.Context) {
 	if len(result) == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Not found"})
 	}
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusOK, gin.H{"products": result})
 }
 
 func getProductById(c *gin.Context) {

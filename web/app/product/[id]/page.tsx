@@ -1,4 +1,4 @@
-import { getProduct } from "@/app/lib/api"
+import { getProduct } from "@/lib/api"
 
 export default async function Page({
     params,
@@ -6,7 +6,13 @@ export default async function Page({
     params: Promise<{ id: number }>
 }) {
     const { id } = await params
-    const product = await getProduct(id)
-
-    return <h1>{product?.name && "Not found"}</h1>
+    try {
+        const product = await getProduct(id)
+        if (!product) {
+            return <h1>Not found</h1>
+        }
+        return <h1>{JSON.stringify(product)}</h1>
+    } catch (error) {
+        return <h1>Not found</h1>
+    }
 }

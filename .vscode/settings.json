@@ -23,6 +23,7 @@
                 "/",
                 "/dish",
                 "/product",
+                "/profile",
                 "/search"
             ],
             "current_route": "/search"
